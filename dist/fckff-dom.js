@@ -35,10 +35,10 @@ var FckffDOM = function () {
 		$('getLink').remove();
 		$('meta').remove();
 
-		this.title = $('title').text();
+		this._title = $('title').text();
 		this._lastId = -1;
 		this._nodes = [];
-		this._traversed = this._traverse($, 'body');
+		this._body = this._traverse($, 'body');
 	}
 
 	/**
@@ -56,7 +56,7 @@ var FckffDOM = function () {
 				$(element)[0].children.forEach(function (child) {
 					if (child.type === 'text') {
 						var cleanText = child.data.replace(/\t/gi, '').replace(/\n/gi, ' ').replace(/\s+/gi, ' ');
-						if (cleanText.length > 0) {
+						if (cleanText.replace(/\s/gi, '').length > 0) {
 							html = html.replace(child.data, '<span>' + cleanText + '</span>');
 						}
 					}
@@ -84,8 +84,8 @@ var FckffDOM = function () {
 			var id = this._getNextId();
 
 			/**
-    * A node has only text, if it has no children.
-    * There is no mixture of elements and text allowed.
+    * A node has only _text, if it has no children.
+    * There is no mixture of elements and _text allowed.
     * _closeHtml takes care of this.
     * @type {string}
     */
@@ -99,26 +99,105 @@ var FckffDOM = function () {
 				});
 			}
 
-			var node = new _node2.default(id, text, FckffDOM._getType(cNode[0].name), cNode.html(), parentId, this, cNode.attr('href'), FckffDOM._getData(cNode[0].attribs), children);
+			var classes = [];
+			if (cNode.attr('class')) {
+				classes = cNode.attr('class').split(' ');
+			}
+			var ids = [];
+			if (cNode.attr('id')) {
+				ids = cNode.attr('id').split(' ');
+			}
+
+			var node = new _node2.default(id, text, FckffDOM._getType(cNode[0].name), cNode.html(), parentId, this, cNode.attr('href'), FckffDOM._getData(cNode[0].attribs), classes, ids, children);
 			this._nodes[id] = node;
 			return node;
+		}
+	}, {
+		key: 'querySelector',
+		value: function querySelector(selector) {
+			return _lodash2.default.first(this.querySelectorAll(selector));
+		}
+	}, {
+		key: 'querySelectorAll',
+		value: function querySelectorAll(selector) {
+			return this._nodes.filter(function (node) {
+				return node.isSelected(selector);
+			});
+		}
+	}, {
+		key: 'getNodeById',
+		value: function getNodeById(id) {
+			return this._nodes.filter(function (node) {
+				return node.isSelected(id);
+			})[0];
+		}
+	}, {
+		key: 'body',
+		value: function body() {
+			return this._body;
 		}
 	}, {
 		key: 'findByText',
 		value: function findByText(text) {}
 	}, {
-		key: 'getNodeById',
-		value: function getNodeById(id) {
+		key: 'title',
+		value: function title() {
+			return this._title;
+		}
+	}, {
+		key: 'getById',
+		value: function getById(id) {
 			return this._nodes[id];
+		}
+	}, {
+		key: 'getLinks',
+		value: function getLinks() {
+			return this._nodes.filter(function (node) {
+				return node.hasLink();
+			}).map(function (node) {
+				return node.getLink();
+			});
+		}
+	}, {
+		key: 'text',
+		value: function text() {
+			var body = this.body();
+			if (body) {
+				return body.text();
+			}
+			return '';
 		}
 	}, {
 		key: 'html',
 		value: function html() {
-			var body = _lodash2.default.first(this._nodes);
+			var body = this.body();
 			if (body) {
 				return body.html();
 			}
 			return '';
+		}
+	}, {
+		key: 'cleaneval',
+		value: function cleaneval() {
+			var body = this.body();
+			if (body) {
+				return body.getCleaneval();
+			}
+			return '';
+		}
+	}, {
+		key: 'removeById',
+		value: function removeById(id) {
+			var node = this.getById(id);
+			if (node) {
+				var parentChildren = node.getParent().getChildren().filter(function (n) {
+					return n.getId() !== id;
+				});
+				node.getParent()._children = parentChildren;
+			}
+			this._nodes = this._nodes.filter(function (n) {
+				return n.getId() !== id;
+			});
 		}
 	}], [{
 		key: '_getType',

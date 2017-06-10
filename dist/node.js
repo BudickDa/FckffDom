@@ -45,7 +45,9 @@ var Node = function () {
 	function Node(id, text, type, innterHTML, parent, dom) {
 		var link = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : '';
 		var data = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : {};
-		var children = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : [];
+		var classes = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : [];
+		var ids = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : [];
+		var children = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : [];
 
 		_classCallCheck(this, Node);
 
@@ -90,35 +92,112 @@ var Node = function () {
 			throw new TypeError('Node.constructor() parameter data must be an object.');
 		}
 
+		if (!_lodash2.default.isArray(classes)) {
+			throw new TypeError('Node.constructor() parameter classes must be an array.');
+		}
+
+		if (!_lodash2.default.isArray(ids)) {
+			throw new TypeError('Node.constructor() parameter ids must be an array.');
+		}
+
 		if (!_lodash2.default.isArray(children)) {
 			throw new TypeError('Node.constructor() parameter children must be an array.');
 		}
 
-		this.id = id;
-		this.text = text;
-		this.type = type;
-		this.parent = parent;
-		this.dom = dom;
-		this.hash = _crypto2.default.createHash('md5').update(innterHTML).digest('hex');
-		this.link = link;
-		this.data = data;
-		this.children = children;
+		this._id = id;
+		this._text = text;
+		this._type = type;
+		this._parent = parent;
+		this._dom = dom;
+		this._hash = _crypto2.default.createHash('md5').update(innterHTML).digest('hex');
+		this._link = link;
+		this._data = data;
+		this._classes = classes;
+		this._ids = ids;
+		this._children = children;
 	}
 
 	_createClass(Node, [{
+		key: 'id',
+		value: function id() {
+			return this.getId();
+		}
+	}, {
 		key: 'getId',
 		value: function getId() {
-			return this.id;
+			return this._id;
+		}
+	}, {
+		key: 'hash',
+		value: function hash() {
+			return this.getHash();
+		}
+	}, {
+		key: 'getHash',
+		value: function getHash() {
+			return this._hash;
+		}
+	}, {
+		key: 'text',
+		value: function text() {
+			return this.getText();
 		}
 	}, {
 		key: 'getText',
 		value: function getText() {
-			return this.text;
+			var full = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+			if (this.isLeaf()) {
+				return this._text;
+			}
+			return this.getChildren().map(function (node) {
+				return node.getText(full);
+			}).join('');
+		}
+	}, {
+		key: 'link',
+		value: function link() {
+			return this.getLink();
 		}
 	}, {
 		key: 'getLink',
 		value: function getLink() {
-			return this.link;
+			return this._link;
+		}
+	}, {
+		key: 'hasLink',
+		value: function hasLink() {
+			return Boolean(this._link);
+		}
+	}, {
+		key: 'type',
+		value: function type() {
+			return this.getType();
+		}
+	}, {
+		key: 'getType',
+		value: function getType() {
+			return this._type;
+		}
+	}, {
+		key: 'parent',
+		value: function parent() {
+			return this.getParent();
+		}
+	}, {
+		key: 'getParent',
+		value: function getParent() {
+			return this._dom.getById(this._parent);
+		}
+	}, {
+		key: '_parentId',
+		value: function _parentId() {
+			return this._getParentId;
+		}
+	}, {
+		key: '_getParentId',
+		value: function _getParentId() {
+			return this._parent;
 		}
 
 		/**
@@ -144,13 +223,126 @@ var Node = function () {
 	}, {
 		key: 'getChildren',
 		value: function getChildren() {
-			return this.children;
+			return this._children;
+		}
+	}, {
+		key: 'getCleaneval',
+		value: function getCleaneval() {
+			var tag = this.getType();
+			if (tag === 'p') {
+				return '<' + tag + '>' + this.getText();
+			}
+			if (tag === 'h') {
+				return '<' + tag + '>' + this.getText();
+			}
+			if (tag === 'l') {
+				return '<' + tag + '>' + this.getText();
+			}
+			if (tag === 's') {
+				return '<p>' + this.getText();
+			}
+			if (this.isLeaf()) {
+				return '<p>' + this.getText(true);
+			}
+			return this.getChildren().map(function (childNode) {
+				return childNode.getCleaneval();
+			}).join('');
+		}
+	}, {
+		key: 'getClasses',
+		value: function getClasses() {
+			return this._classes;
+		}
+	}, {
+		key: 'getIds',
+		value: function getIds() {
+			return this._ids;
+		}
+	}, {
+		key: 'isSelected',
+		value: function isSelected(selector) {
+			var cString = selector.match(/\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/gi);
+			var idString = selector.match(/#(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/gi);
+			var selectedClasses = [];
+			var selectedIds = [];
+
+			if (cString) {
+				cString.forEach(function (c) {
+					selectedClasses.push(c.replace('.', ''));
+				});
+			}
+			if (idString) {
+				idString.forEach(function (i) {
+					selectedIds.push(i.replace('#', ''));
+				});
+			}
+
+			for (var i in selectedIds) {
+				var id = selectedIds[i];
+				if (!_lodash2.default.includes(this._ids, id)) {
+					return false;
+				}
+			}
+
+			for (var _i in selectedClasses) {
+				var c = selectedClasses[_i];
+				if (!_lodash2.default.includes(this._classes, c)) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+	}, {
+		key: 'isLeaf',
+		value: function isLeaf() {
+			return this._children.length === 0;
+		}
+	}, {
+		key: 'getClasses',
+		value: function getClasses() {
+			return this._classes;
+		}
+	}, {
+		key: 'getIds',
+		value: function getIds() {
+			return this._ids;
+		}
+	}, {
+		key: 'data',
+		value: function data(key, value) {
+			if (value) {
+				this.setData(key, value);
+			} else {
+				return this.getData(key);
+			}
+		}
+	}, {
+		key: 'getData',
+		value: function getData(key) {
+			if (!key) {
+				this._data;
+			}
+			return this._data[key];
+		}
+	}, {
+		key: 'setData',
+		value: function setData(key, value) {
+			this._data[key] = value;
+		}
+	}, {
+		key: 'remove',
+		value: function remove() {
+			this.getChildren().forEach(function (n) {
+				n.remove();
+			});
+			this._dom.removeById(this.getId());
 		}
 	}, {
 		key: '_getHtmlTag',
 		value: function _getHtmlTag() {
 			var tag = '';
-			switch (this.type) {
+			switch (this._type) {
 				case 'l':
 					tag += 'li';
 					break;
@@ -181,17 +373,17 @@ var Node = function () {
 		value: function _getHtmlDataAttribute() {
 			var _this = this;
 
-			if (_lodash2.default.isEmpty(this.data)) {
+			if (_lodash2.default.isEmpty(this._data)) {
 				return '';
 			}
-			return ' ' + _lodash2.default.keys(this.data).map(function (key) {
-				return 'data-' + key + '="' + _this.data[key] + '"';
+			return ' ' + _lodash2.default.keys(this._data).map(function (key) {
+				return 'data-' + key + '="' + _this._data[key] + '"';
 			}).join(' ');
 		}
 	}, {
 		key: '_getHtmlClosingTag',
 		value: function _getHtmlClosingTag() {
-			switch (this.type) {
+			switch (this._type) {
 				case 'l':
 					return '</li>';
 				case 'p':
@@ -205,6 +397,26 @@ var Node = function () {
 				default:
 					return '</div>';
 			}
+		}
+	}, {
+		key: 'type',
+		get: function get() {
+			return this.getType();
+		}
+	}, {
+		key: 'parent',
+		get: function get() {
+			return this.getParent();
+		}
+	}, {
+		key: 'classList',
+		get: function get() {
+			return this._classes;
+		}
+	}, {
+		key: 'idList',
+		get: function get() {
+			return this._ids;
 		}
 	}]);
 

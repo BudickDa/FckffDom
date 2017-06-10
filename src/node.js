@@ -16,7 +16,17 @@ export default class Node {
 	 * @param {object} data (optional): plain old object. <span data-foo="bar" data-sense=42> becomes: {foo: 'bar', sense: 42}. You can use it to stores addional data in the dom.
 	 * @param {array} children (optional): IDs of the direct children.
 	 */
-	constructor(id, text, type, innterHTML, parent, dom, link = '', data = {}, children = []) {
+	constructor(id,
+							text,
+							type,
+							innterHTML,
+							parent,
+							dom,
+							link = '',
+							data = {},
+							classes = [],
+							ids = [],
+							children = []) {
 		if (typeof id !== 'number') {
 			throw new TypeError(`Node.constructor() parameter id must be a number but is a ${typeof id}').`);
 		}
@@ -58,32 +68,96 @@ export default class Node {
 			throw new TypeError(`Node.constructor() parameter data must be an object.`);
 		}
 
+		if (!_.isArray(classes)) {
+			throw new TypeError(`Node.constructor() parameter classes must be an array.`);
+		}
+
+		if (!_.isArray(ids)) {
+			throw new TypeError(`Node.constructor() parameter ids must be an array.`);
+		}
+
 		if (!_.isArray(children)) {
 			throw new TypeError(`Node.constructor() parameter children must be an array.`);
 		}
 
+		this._id = id;
+		this._text = text;
+		this._type = type
+		this._parent = parent;
+		this._dom = dom;
+		this._hash = crypto.createHash('md5').update(innterHTML).digest('hex');
+		this._link = link;
+		this._data = data;
+		this._classes = classes;
+		this._ids = ids;
+		this._children = children;
 
-		this.id = id;
-		this.text = text;
-		this.type = type
-		this.parent = parent;
-		this.dom = dom;
-		this.hash = crypto.createHash('md5').update(innterHTML).digest('hex');
-		this.link = link;
-		this.data = data;
-		this.children = children;
+	}
+
+	id() {
+		return this.getId();
 	}
 
 	getId() {
-		return this.id;
+		return this._id;
 	}
 
-	getText() {
-		return this.text;
+	hash() {
+		return this.getHash();
 	}
 
+	getHash() {
+		return this._hash;
+	}
+
+	text() {
+		return this.getText();
+	}
+
+	getText(full = false) {
+		if (this.isLeaf()) {
+			return this._text;
+		}
+		return this.getChildren().map(node => node.getText(full)).join('');
+	}
+
+	link() {
+		return this.getLink();
+	}
 	getLink() {
-		return this.link;
+		return this._link;
+	}
+
+	hasLink() {
+		return Boolean(this._link);
+	}
+
+
+	get type(){
+		return this.getType();
+	}
+	type(){
+		return this.getType();
+	}
+	getType() {
+		return this._type;
+	}
+
+	get parent(){
+		return this.getParent();
+	}
+	parent(){
+		return this.getParent();
+	}
+	getParent(){
+		return this._dom.getById(this._parent);
+	}
+
+	_parentId(){
+		return this._getParentId;
+	}
+	_getParentId(){
+		return this._parent;
 	}
 
 	/**
@@ -102,13 +176,120 @@ export default class Node {
 	}
 
 	getChildren() {
-		return this.children;
+		return this._children;
 	}
 
+	getCleaneval() {
+		const tag = this.getType();
+		if (tag === 'p') {
+			return `<${tag}>${this.getText()}`;
+		}
+		if (tag === 'h') {
+			return `<${tag}>${this.getText()}`;
+		}
+		if (tag === 'l') {
+			return `<${tag}>${this.getText()}`;
+		}
+		if (tag === 's') {
+			return `<p>${this.getText()}`;
+		}
+		if (this.isLeaf()) {
+			return `<p>${this.getText(true)}`;
+		}
+		return this.getChildren().map(childNode => childNode.getCleaneval()).join('');
+	}
+
+	getClasses() {
+		return this._classes;
+	}
+
+	getIds() {
+		return this._ids;
+	}
+
+	isSelected(selector) {
+		const cString = selector.match(/\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/gi);
+		const idString = selector.match(/#(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/gi);
+		const selectedClasses = [];
+		const selectedIds = [];
+
+		if (cString) {
+			cString.forEach(c => {
+				selectedClasses.push(c.replace('.', ''));
+			});
+		}
+		if (idString) {
+			idString.forEach(i => {
+				selectedIds.push(i.replace('#', ''));
+			});
+		}
+
+		for (let i in selectedIds){
+			const id = selectedIds[i];
+			if (!_.includes(this._ids, id)) {
+				return false;
+			}
+		}
+
+		for (let i in selectedClasses){
+			const c = selectedClasses[i];
+			if (!_.includes(this._classes, c)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	isLeaf() {
+		return this._children.length === 0;
+	}
+
+	get classList() {
+		return this._classes;
+	}
+
+	getClasses() {
+		return this._classes;
+	}
+
+	get idList() {
+		return this._ids;
+	}
+
+	getIds() {
+		return this._ids;
+	}
+
+	data(key, value) {
+		if (value) {
+			this.setData(key, value);
+		} else {
+			return this.getData(key);
+		}
+	}
+
+	getData(key) {
+		if (!key) {
+			this._data;
+		}
+		return this._data[key];
+	}
+
+	setData(key, value) {
+		this._data[key] = value;
+	}
+
+	remove() {
+		this.getChildren().forEach(n => {
+			n.remove()
+		});
+		this._dom.removeById(this.getId());
+	}
 
 	_getHtmlTag() {
 		let tag = '';
-		switch (this.type) {
+		switch (this._type) {
 			case 'l':
 				tag += 'li';
 				break;
@@ -136,16 +317,16 @@ export default class Node {
 	}
 
 	_getHtmlDataAttribute() {
-		if (_.isEmpty(this.data)) {
+		if (_.isEmpty(this._data)) {
 			return '';
 		}
-		return ' ' + _.keys(this.data).map(key => {
-				return `data-${key}="${this.data[key]}"`
+		return ' ' + _.keys(this._data).map(key => {
+				return `data-${key}="${this._data[key]}"`
 			}).join(' ');
 	}
 
 	_getHtmlClosingTag() {
-		switch (this.type) {
+		switch (this._type) {
 			case 'l':
 				return '</li>';
 			case 'p':

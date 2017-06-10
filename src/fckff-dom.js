@@ -13,10 +13,10 @@ export default class FckffDOM {
 		$('getLink').remove();
 		$('meta').remove();
 
-		this.title = $('title').text();
+		this._title = $('title').text();
 		this._lastId = -1;
 		this._nodes = [];
-		this._traversed = this._traverse($, 'body');
+		this._body = this._traverse($, 'body');
 	}
 
 	/**
@@ -30,7 +30,7 @@ export default class FckffDOM {
 			$(element)[0].children.forEach(child => {
 				if (child.type === 'text') {
 					const cleanText = child.data.replace(/\t/gi, '').replace(/\n/gi, ' ').replace(/\s+/gi, ' ');
-					if (cleanText.length > 0) {
+					if (cleanText.replace(/\s/gi, '').length > 0) {
 						html = html.replace(child.data, `<span>${cleanText}</span>`);
 					}
 				}
@@ -52,8 +52,8 @@ export default class FckffDOM {
 		const id = this._getNextId();
 
 		/**
-		 * A node has only text, if it has no children.
-		 * There is no mixture of elements and text allowed.
+		 * A node has only _text, if it has no children.
+		 * There is no mixture of elements and _text allowed.
 		 * _closeHtml takes care of this.
 		 * @type {string}
 		 */
@@ -65,7 +65,26 @@ export default class FckffDOM {
 			children = _.map(childElements, el => this._traverse($, el, id));
 		}
 
-		const node = new Node(id, text, FckffDOM._getType(cNode[0].name), cNode.html(), parentId, this, cNode.attr('href'), FckffDOM._getData(cNode[0].attribs), children);
+		let classes = [];
+		if (cNode.attr('class')) {
+			classes = cNode.attr('class').split(' ');
+		}
+		let ids = [];
+		if (cNode.attr('id')) {
+			ids = cNode.attr('id').split(' ');
+		}
+
+		const node = new Node(id,
+			text,
+			FckffDOM._getType(cNode[0].name),
+			cNode.html(),
+			parentId,
+			this,
+			cNode.attr('href'),
+			FckffDOM._getData(cNode[0].attribs),
+			classes,
+			ids,
+			children);
 		this._nodes[id] = node;
 		return node;
 	}
@@ -112,19 +131,68 @@ export default class FckffDOM {
 		return data;
 	}
 
+	querySelector(selector) {
+		return _.first(this.querySelectorAll(selector));
+	}
+
+	querySelectorAll(selector) {
+		return this._nodes.filter(node => node.isSelected(selector));
+	}
+
+	getNodeById(id) {
+		return this._nodes.filter(node => node.isSelected(id))[0];
+	}
+
+	body() {
+		return this._body;
+	}
+
 	findByText(text) {
 
 	}
 
-	getNodeById(id) {
+	title() {
+		return this._title;
+	}
+
+	getById(id) {
 		return this._nodes[id];
 	}
 
+	getLinks() {
+		return this._nodes.filter(node => node.hasLink()).map(node => node.getLink());
+	}
+
+	text() {
+		const body = this.body();
+		if (body) {
+			return body.text();
+		}
+		return '';
+	}
+
 	html() {
-		const body = _.first(this._nodes);
+		const body = this.body();
 		if (body) {
 			return body.html();
 		}
 		return '';
+	}
+
+	cleaneval() {
+		const body = this.body();
+		if (body) {
+			return body.getCleaneval();
+		}
+		return '';
+	}
+
+	removeById(id) {
+		const node = this.getById(id);
+		if(node) {
+			const parentChildren = node.getParent().getChildren().filter(n => n.getId() !== id);
+			node.getParent()._children = parentChildren;
+		}
+		this._nodes = this._nodes.filter(n => n.getId() !== id);
 	}
 }
