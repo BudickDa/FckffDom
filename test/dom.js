@@ -34,7 +34,12 @@ describe('Dom', function() {
 			assert.equal(dom.getById(2).getType(), 'h');
 			assert.equal(dom.getById(3).getType(), 'p');
 		});
+		it('should create a dom from html without body', function(){
+			const dom = new FckffDOM('<div id="no-body"><p class="class1 class2">Class</p><p id="id1 id2">Id</p></div>');
+			assert.equal(dom.body().getChildren()[0]._ids[0], 'no-body');
+		});
 	});
+
 
 	describe('#_closeHtml', function() {
 		it('should enclose getText in innterHtml mixed with tags in tags', function() {

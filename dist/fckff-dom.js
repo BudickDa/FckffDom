@@ -26,6 +26,9 @@ var FckffDOM = function () {
 	function FckffDOM(html) {
 		_classCallCheck(this, FckffDOM);
 
+		if (html.indexOf('<body>') === -1) {
+			html = '<body>' + html + '</body>';
+		}
 		var $ = _cheerio2.default.load(html);
 		/**
    * Clean clutter out
@@ -38,6 +41,7 @@ var FckffDOM = function () {
 		this._title = $('title').text();
 		this._lastId = -1;
 		this._nodes = [];
+
 		this._body = this._traverse($, 'body');
 	}
 
@@ -190,10 +194,13 @@ var FckffDOM = function () {
 		value: function removeById(id) {
 			var node = this.getById(id);
 			if (node) {
-				var parentChildren = node.getParent().getChildren().filter(function (n) {
-					return n.getId() !== id;
-				});
-				node.getParent()._children = parentChildren;
+				var parent = node.getParent();
+				if (parent) {
+					var parentChildren = parent.getChildren().filter(function (n) {
+						return n.getId() !== id;
+					});
+					parent._children = parentChildren;
+				}
 			}
 			this._nodes = this._nodes.filter(function (n) {
 				return n.getId() !== id;

@@ -87,7 +87,7 @@ describe('Node', function() {
 			const html = '<body><p>Text</p></body>';
 			const dom = new Dom(html);
 			const node = dom.getById(0)
-			assert.equal(node.getCleaneval(), '<p>Text');
+			assert.equal(node.getCleaneval(), '<p>Text\n');
 		});
 	});
 

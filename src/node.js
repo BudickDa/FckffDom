@@ -124,6 +124,7 @@ export default class Node {
 	link() {
 		return this.getLink();
 	}
+
 	getLink() {
 		return this._link;
 	}
@@ -133,30 +134,35 @@ export default class Node {
 	}
 
 
-	get type(){
+	get type() {
 		return this.getType();
 	}
-	type(){
+
+	type() {
 		return this.getType();
 	}
+
 	getType() {
 		return this._type;
 	}
 
-	get parent(){
+	get parent() {
 		return this.getParent();
 	}
-	parent(){
+
+	parent() {
 		return this.getParent();
 	}
-	getParent(){
+
+	getParent() {
 		return this._dom.getById(this._parent);
 	}
 
-	_parentId(){
+	_parentId() {
 		return this._getParentId;
 	}
-	_getParentId(){
+
+	_getParentId() {
 		return this._parent;
 	}
 
@@ -182,21 +188,26 @@ export default class Node {
 	getCleaneval() {
 		const tag = this.getType();
 		if (tag === 'p') {
-			return `<${tag}>${this.getText()}`;
+			return `<${tag}>${this.getText()}
+`;
 		}
 		if (tag === 'h') {
-			return `<${tag}>${this.getText()}`;
+			return `<${tag}>${this.getText()}
+`;
 		}
 		if (tag === 'l') {
-			return `<${tag}>${this.getText()}`;
+			return `<${tag}>${this.getText()}
+`;
 		}
 		if (tag === 's') {
-			return `<p>${this.getText()}`;
+			return `<p>${this.getText()}
+`;
 		}
 		if (this.isLeaf()) {
-			return `<p>${this.getText(true)}`;
+			return `<p>${this.getText(true)}
+`;
 		}
-		return this.getChildren().map(childNode => childNode.getCleaneval()).join('');
+		return this.getChildren().map(childNode => childNode.getCleaneval()).join('\n');
 	}
 
 	getClasses() {

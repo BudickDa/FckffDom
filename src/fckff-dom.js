@@ -4,6 +4,9 @@ import Node from './node';
 
 export default class FckffDOM {
 	constructor(html) {
+		if(html.indexOf('<body>')===-1){
+			html = `<body>${html}</body>`;
+		}
 		const $ = Cheerio.load(html);
 		/**
 		 * Clean clutter out
@@ -16,6 +19,7 @@ export default class FckffDOM {
 		this._title = $('title').text();
 		this._lastId = -1;
 		this._nodes = [];
+
 		this._body = this._traverse($, 'body');
 	}
 
@@ -189,9 +193,12 @@ export default class FckffDOM {
 
 	removeById(id) {
 		const node = this.getById(id);
-		if(node) {
-			const parentChildren = node.getParent().getChildren().filter(n => n.getId() !== id);
-			node.getParent()._children = parentChildren;
+		if (node) {
+			const parent = node.getParent();
+			if (parent) {
+				const parentChildren = parent.getChildren().filter(n => n.getId() !== id);
+				parent._children = parentChildren;
+			}
 		}
 		this._nodes = this._nodes.filter(n => n.getId() !== id);
 	}

@@ -230,23 +230,23 @@ var Node = function () {
 		value: function getCleaneval() {
 			var tag = this.getType();
 			if (tag === 'p') {
-				return '<' + tag + '>' + this.getText();
+				return '<' + tag + '>' + this.getText() + '\n';
 			}
 			if (tag === 'h') {
-				return '<' + tag + '>' + this.getText();
+				return '<' + tag + '>' + this.getText() + '\n';
 			}
 			if (tag === 'l') {
-				return '<' + tag + '>' + this.getText();
+				return '<' + tag + '>' + this.getText() + '\n';
 			}
 			if (tag === 's') {
-				return '<p>' + this.getText();
+				return '<p>' + this.getText() + '\n';
 			}
 			if (this.isLeaf()) {
-				return '<p>' + this.getText(true);
+				return '<p>' + this.getText(true) + '\n';
 			}
 			return this.getChildren().map(function (childNode) {
 				return childNode.getCleaneval();
-			}).join('');
+			}).join('\n');
 		}
 	}, {
 		key: 'getClasses',
