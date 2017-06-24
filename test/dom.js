@@ -51,8 +51,8 @@ describe('Dom', function() {
 
 	describe('#html()', function() {
 		it('should return the html of the body', function() {
-			const dom = new FckffDOM(html.replace(/\n|\t/gi, ''));
-			assert.equal(dom.html(), '<div><div><h1>Heading 1</h1><p><span>Paragraph 1 </span><a href="http://href.de">Link</a></p></div><div><span data-url="URL" data-foo="bar" data-sense="42">Data</span></div></div>');
+			const dom = new FckffDOM(html);
+			assert.equal(dom.html(), '<div><div><h1>Heading 1</h1><p><span>Paragraph 1</span><a href="http://href.de">Link</a></p></div><div><span data-url="URL" data-foo="bar" data-sense="42">Data</span></div></div>');
 		});
 	});
 
@@ -72,6 +72,36 @@ describe('Dom', function() {
 				<p>Paragraph 1 Link
 				<p>Paragraph 2`.replace(/\n|\t|\s/gi, '')
 			);
+		});
+	});
+
+	describe('#remove()', function() {
+		it('should return the html of the body', function() {
+			const dom = new FckffDOM(`
+										<html>
+											<head>
+												<title>Test</title>
+											</head>
+											<body id="three">
+												<div>
+													<h1 id="two">Heading 1</h1>
+													<p>Paragraph 1  
+														<a href="http://href.de">Link</a>
+													</p>
+												</div>
+												<div>
+													<span id="one" data-url="URL" data-foo="bar" data-sense="42">Data <span>This should be removed too!</span></span>
+												</div>
+											</body>
+										</html>`);
+
+			assert.equal(dom.html(),'<div><div><h1>Heading 1</h1><p><span>Paragraph 1</span><a href="http://href.de">Link</a></p></div><div><span data-url="URL" data-foo="bar" data-sense="42"><span>Data</span><span>This should be removed too!</span></span></div></div>');
+			dom.querySelector('#one').remove();
+			assert.equal(dom.html(), '<div><div><h1>Heading 1</h1><p><span>Paragraph 1</span><a href="http://href.de">Link</a></p></div><div></div></div>');
+			dom.querySelector('#two').remove();
+			assert.equal(dom.html(), '<div><div><p><span>Paragraph 1</span><a href="http://href.de">Link</a></p></div><div></div></div>');
+			dom.querySelector('#three').remove();
+			assert.equal(dom.html(), '<div></div>');
 		});
 	});
 });

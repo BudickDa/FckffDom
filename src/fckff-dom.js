@@ -4,10 +4,10 @@ import Node from './node';
 
 export default class FckffDOM {
 	constructor(html) {
-		if(html.indexOf('<body>')===-1){
+		if (html.indexOf('<body') === -1) {
 			html = `<body>${html}</body>`;
 		}
-		const $ = Cheerio.load(html);
+		const $ = Cheerio.load(html.replace(/\t|\n/gi,' ').replace(/\s+/gi, ' '));
 		/**
 		 * Clean clutter out
 		 */
@@ -21,6 +21,11 @@ export default class FckffDOM {
 		this._nodes = [];
 
 		this._body = this._traverse($, 'body');
+		this._nodes.forEach(n =>{
+			if(n.getText().replace(/\s/gi, '').length===0){
+				n.remove();
+			}
+		});
 	}
 
 	/**
@@ -33,7 +38,7 @@ export default class FckffDOM {
 		if ($(element).children().length > 0) {
 			$(element)[0].children.forEach(child => {
 				if (child.type === 'text') {
-					const cleanText = child.data.replace(/\t/gi, '').replace(/\n/gi, ' ').replace(/\s+/gi, ' ');
+					const cleanText = child.data;
 					if (cleanText.replace(/\s/gi, '').length > 0) {
 						html = html.replace(child.data, `<span>${cleanText}</span>`);
 					}
@@ -94,7 +99,8 @@ export default class FckffDOM {
 	}
 
 	static _getType(name) {
-		switch (name.toLowerCase()) {
+		name = name.toLowerCase();
+		switch (name) {
 			case 'li':
 				return 'l';
 			case 'p':
@@ -116,6 +122,9 @@ export default class FckffDOM {
 			case 'h6':
 				return 'h';
 			default:
+				if (_.includes(['b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'var', 'bdo', 'img', 'map', 'object', 'q', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea'], name)) {
+					return 's';
+				}
 				return 'd';
 		}
 	}
@@ -160,7 +169,7 @@ export default class FckffDOM {
 	}
 
 	getById(id) {
-		return this._nodes[id];
+		return _.find(this._nodes, n => n.getId() === id);
 	}
 
 	getLinks() {
@@ -193,13 +202,6 @@ export default class FckffDOM {
 
 	removeById(id) {
 		const node = this.getById(id);
-		if (node) {
-			const parent = node.getParent();
-			if (parent) {
-				const parentChildren = parent.getChildren().filter(n => n.getId() !== id);
-				parent._children = parentChildren;
-			}
-		}
-		this._nodes = this._nodes.filter(n => n.getId() !== id);
+		return node.remove();
 	}
 }

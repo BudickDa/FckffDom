@@ -81,7 +81,7 @@ export default class Node {
 		}
 
 		this._id = id;
-		this._text = text;
+		this._text = text.replace(/\n|\t/gi, ' ').replace(/\s+/gi, ' ').trim();
 		this._type = type
 		this._parent = parent;
 		this._dom = dom;
@@ -114,11 +114,11 @@ export default class Node {
 		return this.getText();
 	}
 
-	getText(full = false) {
+	getText() {
 		if (this.isLeaf()) {
-			return this._text;
+			return this._text + ' ';
 		}
-		return this.getChildren().map(node => node.getText(full)).join('');
+		return this.getChildren().map(node => node.getText()).join('');
 	}
 
 	link() {
@@ -178,7 +178,7 @@ export default class Node {
 	html() {
 		const children = this.getChildren();
 		const content = children.length === 0 ? this.getText() : children.map(n => n.html()).join('');
-		return `${this._getHtmlTag()}${content}${this._getHtmlClosingTag()}`;
+		return `${this._getHtmlTag()}${content.trim()}${this._getHtmlClosingTag()}`;
 	}
 
 	getChildren() {
@@ -186,28 +186,23 @@ export default class Node {
 	}
 
 	getCleaneval() {
-		const tag = this.getType();
-		if (tag === 'p') {
-			return `<${tag}>${this.getText()}
-`;
-		}
-		if (tag === 'h') {
-			return `<${tag}>${this.getText()}
-`;
-		}
-		if (tag === 'l') {
-			return `<${tag}>${this.getText()}
-`;
-		}
-		if (tag === 's') {
-			return `<p>${this.getText()}
-`;
-		}
+		const cTags = ['p', 'h', 'l'];
 		if (this.isLeaf()) {
-			return `<p>${this.getText(true)}
+			const tag = this.getType();
+			if (this._text.replace(/\s/gi, '').length > 0 && _.includes(cTags, tag)) {
+				return `<${tag}>${this._text.trim()}
 `;
+			}
+			return this._text + ' ';
 		}
-		return this.getChildren().map(childNode => childNode.getCleaneval()).join('\n');
+		const text = this.getChildren().map(childNode => childNode.getCleaneval()).join('\n');
+		if (text.replace(/\s/gi, '').length > 0) {
+			if (text.indexOf('<') === 0) {
+				return text;
+			}
+			return `<p>${text}`;
+		}
+		return text;
 	}
 
 	getClasses() {
@@ -256,7 +251,8 @@ export default class Node {
 		return this._children.length === 0;
 	}
 
-	get classList() {
+	get
+	classList() {
 		return this._classes;
 	}
 
@@ -264,7 +260,8 @@ export default class Node {
 		return this._classes;
 	}
 
-	get idList() {
+	get
+	idList() {
 		return this._ids;
 	}
 
@@ -291,11 +288,24 @@ export default class Node {
 		this._data[key] = value;
 	}
 
-	remove() {
-		this.getChildren().forEach(n => {
-			n.remove()
-		});
-		this._dom.removeById(this.getId());
+	remove(recursiv = false) {
+		if (this._parent === -1) {
+			this._dom._nodes = [this];
+			this._children = [];
+			this._text = '';
+		} else {
+			if (!recursiv) {
+				const parent = this.getParent();
+				if(parent) {
+					parent._children = this.getParent()._children.filter(c => c.getId() !== this.getId());
+				}
+			}
+			this.getChildren().forEach(n => {
+				n.remove(true)
+			});
+			this._dom._nodes = this._dom._nodes.filter(n => n.getId() !== this.getId());
+		}
+		delete this;
 	}
 
 	_getHtmlTag() {

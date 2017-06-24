@@ -105,7 +105,7 @@ var Node = function () {
 		}
 
 		this._id = id;
-		this._text = text;
+		this._text = text.replace(/\n|\t/gi, ' ').replace(/\s+/gi, ' ').trim();
 		this._type = type;
 		this._parent = parent;
 		this._dom = dom;
@@ -145,13 +145,11 @@ var Node = function () {
 	}, {
 		key: 'getText',
 		value: function getText() {
-			var full = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
 			if (this.isLeaf()) {
-				return this._text;
+				return this._text + ' ';
 			}
 			return this.getChildren().map(function (node) {
-				return node.getText(full);
+				return node.getText();
 			}).join('');
 		}
 	}, {
@@ -218,7 +216,7 @@ var Node = function () {
 			var content = children.length === 0 ? this.getText() : children.map(function (n) {
 				return n.html();
 			}).join('');
-			return '' + this._getHtmlTag() + content + this._getHtmlClosingTag();
+			return '' + this._getHtmlTag() + content.trim() + this._getHtmlClosingTag();
 		}
 	}, {
 		key: 'getChildren',
@@ -228,25 +226,24 @@ var Node = function () {
 	}, {
 		key: 'getCleaneval',
 		value: function getCleaneval() {
-			var tag = this.getType();
-			if (tag === 'p') {
-				return '<' + tag + '>' + this.getText() + '\n';
-			}
-			if (tag === 'h') {
-				return '<' + tag + '>' + this.getText() + '\n';
-			}
-			if (tag === 'l') {
-				return '<' + tag + '>' + this.getText() + '\n';
-			}
-			if (tag === 's') {
-				return '<p>' + this.getText() + '\n';
-			}
+			var cTags = ['p', 'h', 'l'];
 			if (this.isLeaf()) {
-				return '<p>' + this.getText(true) + '\n';
+				var tag = this.getType();
+				if (this._text.replace(/\s/gi, '').length > 0 && _lodash2.default.includes(cTags, tag)) {
+					return '<' + tag + '>' + this._text.trim() + '\n';
+				}
+				return this._text + ' ';
 			}
-			return this.getChildren().map(function (childNode) {
+			var text = this.getChildren().map(function (childNode) {
 				return childNode.getCleaneval();
 			}).join('\n');
+			if (text.replace(/\s/gi, '').length > 0) {
+				if (text.indexOf('<') === 0) {
+					return text;
+				}
+				return '<p>' + text;
+			}
+			return text;
 		}
 	}, {
 		key: 'getClasses',
@@ -333,10 +330,31 @@ var Node = function () {
 	}, {
 		key: 'remove',
 		value: function remove() {
-			this.getChildren().forEach(function (n) {
-				n.remove();
-			});
-			this._dom.removeById(this.getId());
+			var _this = this;
+
+			var recursiv = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+			if (this._parent === -1) {
+				this._dom._nodes = [this];
+				this._children = [];
+				this._text = '';
+			} else {
+				if (!recursiv) {
+					var parent = this.getParent();
+					if (parent) {
+						parent._children = this.getParent()._children.filter(function (c) {
+							return c.getId() !== _this.getId();
+						});
+					}
+				}
+				this.getChildren().forEach(function (n) {
+					n.remove(true);
+				});
+				this._dom._nodes = this._dom._nodes.filter(function (n) {
+					return n.getId() !== _this.getId();
+				});
+			}
+			delete this;
 		}
 	}, {
 		key: '_getHtmlTag',
@@ -371,13 +389,13 @@ var Node = function () {
 	}, {
 		key: '_getHtmlDataAttribute',
 		value: function _getHtmlDataAttribute() {
-			var _this = this;
+			var _this2 = this;
 
 			if (_lodash2.default.isEmpty(this._data)) {
 				return '';
 			}
 			return ' ' + _lodash2.default.keys(this._data).map(function (key) {
-				return 'data-' + key + '="' + _this._data[key] + '"';
+				return 'data-' + key + '="' + _this2._data[key] + '"';
 			}).join(' ');
 		}
 	}, {

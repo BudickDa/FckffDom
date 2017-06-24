@@ -26,10 +26,10 @@ var FckffDOM = function () {
 	function FckffDOM(html) {
 		_classCallCheck(this, FckffDOM);
 
-		if (html.indexOf('<body>') === -1) {
+		if (html.indexOf('<body') === -1) {
 			html = '<body>' + html + '</body>';
 		}
-		var $ = _cheerio2.default.load(html);
+		var $ = _cheerio2.default.load(html.replace(/\t|\n/gi, ' ').replace(/\s+/gi, ' '));
 		/**
    * Clean clutter out
    */
@@ -43,6 +43,11 @@ var FckffDOM = function () {
 		this._nodes = [];
 
 		this._body = this._traverse($, 'body');
+		this._nodes.forEach(function (n) {
+			if (n.getText().replace(/\s/gi, '').length === 0) {
+				n.remove();
+			}
+		});
 	}
 
 	/**
@@ -59,7 +64,7 @@ var FckffDOM = function () {
 			if ($(element).children().length > 0) {
 				$(element)[0].children.forEach(function (child) {
 					if (child.type === 'text') {
-						var cleanText = child.data.replace(/\t/gi, '').replace(/\n/gi, ' ').replace(/\s+/gi, ' ');
+						var cleanText = child.data;
 						if (cleanText.replace(/\s/gi, '').length > 0) {
 							html = html.replace(child.data, '<span>' + cleanText + '</span>');
 						}
@@ -151,7 +156,9 @@ var FckffDOM = function () {
 	}, {
 		key: 'getById',
 		value: function getById(id) {
-			return this._nodes[id];
+			return _lodash2.default.find(this._nodes, function (n) {
+				return n.getId() === id;
+			});
 		}
 	}, {
 		key: 'getLinks',
@@ -193,23 +200,13 @@ var FckffDOM = function () {
 		key: 'removeById',
 		value: function removeById(id) {
 			var node = this.getById(id);
-			if (node) {
-				var parent = node.getParent();
-				if (parent) {
-					var parentChildren = parent.getChildren().filter(function (n) {
-						return n.getId() !== id;
-					});
-					parent._children = parentChildren;
-				}
-			}
-			this._nodes = this._nodes.filter(function (n) {
-				return n.getId() !== id;
-			});
+			return node.remove();
 		}
 	}], [{
 		key: '_getType',
 		value: function _getType(name) {
-			switch (name.toLowerCase()) {
+			name = name.toLowerCase();
+			switch (name) {
 				case 'li':
 					return 'l';
 				case 'p':
@@ -231,6 +228,9 @@ var FckffDOM = function () {
 				case 'h6':
 					return 'h';
 				default:
+					if (_lodash2.default.includes(['b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'var', 'bdo', 'img', 'map', 'object', 'q', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea'], name)) {
+						return 's';
+					}
 					return 'd';
 			}
 		}

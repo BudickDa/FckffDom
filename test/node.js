@@ -42,13 +42,13 @@ describe('Node', function() {
 			const html = '<body><p>Text</p></body>';
 			const dom = new Dom(html);
 			const paragraph = dom.getById(1);
-			assert.equal(paragraph.text(), 'Text');
+			assert.equal(paragraph.text(), 'Text ');
 		});
 		it('should return the text of a node and its children', function() {
 			const html = '<body><p>Text <span>and its child</span></p></body>';
 			const dom = new Dom(html);
 			const paragraph = dom.getById(1);
-			assert.equal(paragraph.text(), 'Text and its child');
+			assert.equal(paragraph.text(), 'Text and its child ');
 		});
 	});
 
@@ -64,7 +64,7 @@ describe('Node', function() {
 			const html = '<body><p>Text <span>Span</span></p></body>';
 			const dom = new Dom(html);
 			const node = dom.getById(0);
-			assert.equal(node.html(), '<div><p><span>Text </span><span>Span</span></p></div>');
+			assert.equal(node.html(), '<div><p><span>Text</span><span>Span</span></p></div>');
 		});
 	});
 
