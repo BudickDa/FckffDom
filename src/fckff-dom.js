@@ -7,6 +7,7 @@ export default class FckffDOM {
 		if (html.indexOf('<body') === -1) {
 			html = `<body>${html}</body>`;
 		}
+		this._html = html;
 		const $ = Cheerio.load(html.replace(/\t|\n/gi,' ').replace(/\s+/gi, ' '));
 		/**
 		 * Clean clutter out
@@ -26,6 +27,10 @@ export default class FckffDOM {
 				n.remove();
 			}
 		});
+	}
+
+	getOriginal(){
+		return this._html;
 	}
 
 	/**

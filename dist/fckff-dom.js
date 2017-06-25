@@ -29,6 +29,7 @@ var FckffDOM = function () {
 		if (html.indexOf('<body') === -1) {
 			html = '<body>' + html + '</body>';
 		}
+		this._html = html;
 		var $ = _cheerio2.default.load(html.replace(/\t|\n/gi, ' ').replace(/\s+/gi, ' '));
 		/**
    * Clean clutter out
@@ -50,14 +51,19 @@ var FckffDOM = function () {
 		});
 	}
 
-	/**
-  * If innerHtml of a tag is mixed getText and nodes, put getText into span tags so order is kept.
-  * @param $
-  * @private
-  */
-
-
 	_createClass(FckffDOM, [{
+		key: 'getOriginal',
+		value: function getOriginal() {
+			return this._html;
+		}
+
+		/**
+   * If innerHtml of a tag is mixed getText and nodes, put getText into span tags so order is kept.
+   * @param $
+   * @private
+   */
+
+	}, {
 		key: '_closeHtml',
 		value: function _closeHtml($, element) {
 			var html = $(element).html();
