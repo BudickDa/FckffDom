@@ -99,8 +99,7 @@ export default class FckffDOM {
 	}
 
 	static _getType(name) {
-		name = name.toLowerCase();
-		switch (name) {
+		switch (name.toLowerCase()) {
 			case 'li':
 				return 'l';
 			case 'p':

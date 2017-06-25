@@ -219,6 +219,22 @@ var Node = function () {
 			return '' + this._getHtmlTag() + content.trim() + this._getHtmlClosingTag();
 		}
 	}, {
+		key: 'getSiblings',
+		value: function getSiblings() {
+			var _this = this;
+
+			if (this._parent === -1) {
+				return [];
+			}
+			var parent = this.getParent();
+			if (parent) {
+				return parent.getChildren().filter(function (c) {
+					return c.getId() !== _this.getId();
+				});
+			}
+			return [];
+		}
+	}, {
 		key: 'getChildren',
 		value: function getChildren() {
 			return this._children;
@@ -226,22 +242,32 @@ var Node = function () {
 	}, {
 		key: 'getCleaneval',
 		value: function getCleaneval() {
+			var recursiv = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
 			var cTags = ['p', 'h', 'l'];
-			if (this.isLeaf()) {
-				var tag = this.getType();
-				if (this._text.replace(/\s/gi, '').length > 0 && _lodash2.default.includes(cTags, tag)) {
-					return '<' + tag + '>' + this._text.trim() + '\n';
-				}
-				return this._text + ' ';
+			var text = '';
+			var tag = this.getType();
+			if (_lodash2.default.includes(cTags, tag)) {
+				text = '<' + tag + '>';
 			}
-			var text = this.getChildren().map(function (childNode) {
-				return childNode.getCleaneval();
-			}).join('\n');
-			if (text.replace(/\s/gi, '').length > 0) {
-				if (text.indexOf('<') === 0) {
-					return text;
+			if (this.isLeaf()) {
+				text += this._text.trim() + ' ';
+			} else {
+				text += this.getChildren().map(function (childNode) {
+					return childNode.getCleaneval(true);
+				}).join('\n');
+			}
+
+			var startsWithTag = text.indexOf('<') === 0;
+
+			if (!recursiv) {
+				if (!startsWithTag) {
+					return ('<p>' + text).trim();
 				}
-				return '<p>' + text;
+				return text.trim();
+			}
+			if (text.replace(/<p>|<l>|<h>|\s|\n|\t/gi, '').length === 0) {
+				return '';
 			}
 			return text;
 		}
@@ -330,7 +356,7 @@ var Node = function () {
 	}, {
 		key: 'remove',
 		value: function remove() {
-			var _this = this;
+			var _this2 = this;
 
 			var recursiv = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
@@ -343,7 +369,7 @@ var Node = function () {
 					var parent = this.getParent();
 					if (parent) {
 						parent._children = this.getParent()._children.filter(function (c) {
-							return c.getId() !== _this.getId();
+							return c.getId() !== _this2.getId();
 						});
 					}
 				}
@@ -351,7 +377,7 @@ var Node = function () {
 					n.remove(true);
 				});
 				this._dom._nodes = this._dom._nodes.filter(function (n) {
-					return n.getId() !== _this.getId();
+					return n.getId() !== _this2.getId();
 				});
 			}
 			delete this;
@@ -389,13 +415,13 @@ var Node = function () {
 	}, {
 		key: '_getHtmlDataAttribute',
 		value: function _getHtmlDataAttribute() {
-			var _this2 = this;
+			var _this3 = this;
 
 			if (_lodash2.default.isEmpty(this._data)) {
 				return '';
 			}
 			return ' ' + _lodash2.default.keys(this._data).map(function (key) {
-				return 'data-' + key + '="' + _this2._data[key] + '"';
+				return 'data-' + key + '="' + _this3._data[key] + '"';
 			}).join(' ');
 		}
 	}, {

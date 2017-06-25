@@ -87,7 +87,14 @@ describe('Node', function() {
 			const html = '<body><p>Text</p></body>';
 			const dom = new Dom(html);
 			const node = dom.getById(0)
-			assert.equal(node.getCleaneval(), '<p>Text\n');
+			assert.equal(node.getCleaneval(), '<p>Text');
+		});
+
+		it('should return cleaneval of the body without children', function() {
+			const html = '<body>Text</body>';
+			const dom = new Dom(html);
+			const node = dom.getById(0)
+			assert.equal(node.getCleaneval(), '<p>Text');
 		});
 	});
 
@@ -155,4 +162,28 @@ describe('Node', function() {
 			assert.equal(dom.html(), '<div><p>Text</p></div>');
 		});
 	});
+
+	describe('#getSiblings()', function() {
+		it('should get siblings', function() {
+			const html = '<body><p>Text</p><p id="one">Text 2</p></body>';
+			const dom = new Dom(html);
+			const node = dom.querySelector('#one');
+			assert.equal(node.getSiblings()[0].html(), '<p>Text</p>');
+		});
+
+		it('should get siblings', function() {
+			const html = '<body><p>Text</p><div id="one">Text 2<p>Child 1</p></div><div>Child 2</div></body>';
+			const dom = new Dom(html);
+			const node = dom.querySelector('#one');
+			assert.equal(node.getSiblings().map(s => s.html()).join(''), '<p>Text</p><div>Child 2</div>');
+		});
+
+		it('should get siblings of body and return an empty array', function() {
+			const html = '<body id="one"><p>Text</p><div>Text 2<p>Child 1</p></div><div>Child 2</div></body>';
+			const dom = new Dom(html);
+			const node = dom.querySelector('#one');
+			assert.equal(node.getSiblings().length, 0);
+		});
+	});
+
 });

@@ -181,26 +181,44 @@ export default class Node {
 		return `${this._getHtmlTag()}${content.trim()}${this._getHtmlClosingTag()}`;
 	}
 
+	getSiblings() {
+		if (this._parent === -1) {
+			return [];
+		}
+		const parent = this.getParent();
+		if (parent) {
+			return parent.getChildren().filter(c => c.getId() !== this.getId());
+		}
+		return [];
+	}
+
 	getChildren() {
 		return this._children;
 	}
 
-	getCleaneval() {
+	getCleaneval(recursiv = false) {
 		const cTags = ['p', 'h', 'l'];
-		if (this.isLeaf()) {
-			const tag = this.getType();
-			if (this._text.replace(/\s/gi, '').length > 0 && _.includes(cTags, tag)) {
-				return `<${tag}>${this._text.trim()}
-`;
-			}
-			return this._text + ' ';
+		let text = '';
+		const tag = this.getType();
+		if (_.includes(cTags, tag)) {
+			text = `<${tag}>`;
 		}
-		const text = this.getChildren().map(childNode => childNode.getCleaneval()).join('\n');
-		if (text.replace(/\s/gi, '').length > 0) {
-			if (text.indexOf('<') === 0) {
-				return text;
+		if (this.isLeaf()) {
+			text += `${this._text.trim()} `;
+		} else {
+			text += this.getChildren().map(childNode => childNode.getCleaneval(true)).join('\n');
+		}
+
+		const startsWithTag = text.indexOf('<') === 0;
+
+		if (!recursiv) {
+			if (!startsWithTag) {
+				return `<p>${text}`.trim();
 			}
-			return `<p>${text}`;
+			return text.trim();
+		}
+		if (text.replace(/<p>|<l>|<h>|\s|\n|\t/gi, '').length === 0) {
+			return '';
 		}
 		return text;
 	}
@@ -296,7 +314,7 @@ export default class Node {
 		} else {
 			if (!recursiv) {
 				const parent = this.getParent();
-				if(parent) {
+				if (parent) {
 					parent._children = this.getParent()._children.filter(c => c.getId() !== this.getId());
 				}
 			}

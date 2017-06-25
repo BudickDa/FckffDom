@@ -205,8 +205,7 @@ var FckffDOM = function () {
 	}], [{
 		key: '_getType',
 		value: function _getType(name) {
-			name = name.toLowerCase();
-			switch (name) {
+			switch (name.toLowerCase()) {
 				case 'li':
 					return 'l';
 				case 'p':
