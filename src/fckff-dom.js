@@ -3,217 +3,222 @@ import _ from 'lodash';
 import Node from './node';
 
 export default class FckffDOM {
-	constructor(html) {
-		if (html.indexOf('<body') === -1) {
-			html = `<body>${html}</body>`;
-		}
-		this._html = html;
-		const $ = Cheerio.load(html.replace(/\t|\n/gi,' ').replace(/\s+/gi, ' '));
-		/**
-		 * Clean clutter out
-		 */
-		$('style').remove();
-		$('script').remove();
-		$('getLink').remove();
-		$('meta').remove();
+  constructor(html) {
+    if (html.indexOf('<body') === -1) {
+      html = `<body>${html}</body>`;
+    }
+    this._html = html;
+    const $ = Cheerio.load(html.replace(/\t|\n/gi, ' ').replace(/\s+/gi, ' '));
+    /**
+     * Clean clutter out
+     */
+    $('style').remove();
+    $('script').remove();
+    $('getLink').remove();
+    $('meta').remove();
 
-		this._title = $('title').text();
-		this._lastId = -1;
-		this._nodes = [];
+    this._title = $('title').text();
+    this._lastId = -1;
+    this._nodes = [];
 
-		this._body = this._traverse($, 'body');
-		this._nodes.forEach(n =>{
-			if(n.getText().replace(/\s/gi, '').length===0){
-				n.remove();
-			}
-		});
-	}
+    this._body = this._traverse($, 'body');
+    this._nodes.forEach(n => {
+      if (n.getText().replace(/\s/gi, '').length === 0) {
+        n.remove();
+      }
+    });
+  }
 
-	getOriginal(){
-		return this._html;
-	}
+  getOriginal() {
+    return this._html;
+  }
 
-	/**
-	 * If innerHtml of a tag is mixed getText and nodes, put getText into span tags so order is kept.
-	 * @param $
-	 * @private
-	 */
-	_closeHtml($, element) {
-		let html = $(element).html();
-		if ($(element).children().length > 0) {
-			$(element)[0].children.forEach(child => {
-				if (child.type === 'text') {
-					const cleanText = child.data;
-					if (cleanText.replace(/\s/gi, '').length > 0) {
-						html = html.replace(child.data, `<span>${cleanText}</span>`);
-					}
-				}
-			});
-		}
-		return html;
-	}
+  /**
+   * If innerHtml of a tag is mixed getText and nodes, put getText into span tags so order is kept.
+   * @param $
+   * @private
+   */
+  _closeHtml($, element) {
+    let html = $(element).html();
+    if ($(element).children().length > 0) {
+      $(element)[0].children.forEach(child => {
+        if (child.type === 'text') {
+          const cleanText = child.data;
+          if (cleanText.replace(/\s/gi, '').length > 0) {
+            html = html.replace(child.data, `<span>${cleanText}</span>`);
+          }
+        }
+      });
+    }
+    return html;
+  }
 
-	_getNextId() {
-		this._lastId++;
-		return this._lastId;
-	}
+  _getNextId() {
+    this._lastId++;
+    return this._lastId;
+  }
 
-	_traverse($, element, parentId = -1) {
-		$(element).html(this._closeHtml($, element));
-		const cNode = $(element);
-		const childElements = cNode.children();
+  _traverse($, element, parentId = -1) {
+    $(element).html(this._closeHtml($, element));
 
-		const id = this._getNextId();
+    const cNode = $(element);
+    const childElements = cNode.children();
 
-		/**
-		 * A node has only _text, if it has no children.
-		 * There is no mixture of elements and _text allowed.
-		 * _closeHtml takes care of this.
-		 * @type {string}
-		 */
-		let text = '';
-		let children = [];
-		if (childElements.length === 0) {
-			text = cNode.text();
-		} else {
-			children = _.map(childElements, el => this._traverse($, el, id));
-		}
+    const id = this._getNextId();
 
-		let classes = [];
-		if (cNode.attr('class')) {
-			classes = cNode.attr('class').split(' ');
-		}
-		let ids = [];
-		if (cNode.attr('id')) {
-			ids = cNode.attr('id').split(' ');
-		}
-		const type =FckffDOM._getType(cNode[0].name);
+    /**
+     * A node has only _text, if it has no children.
+     * There is no mixture of elements and _text allowed.
+     * _closeHtml takes care of this.
+     * @type {string}
+     */
+    let text = '';
+    let children = [];
 
-		let html = cNode.html();
-		if(type==='i'){
-			html = cNode.attr('src');
-		}
+    if (childElements.length === 0) {
+      text = cNode.text();
+    } else {
+      children = _.map(childElements, el => this._traverse($, el, id));
+    }
 
-		const node = new Node(id,
-			text,
-			type,
-			html,
-			parentId,
-			this,
-			cNode.attr('href'),
-			FckffDOM._getData(cNode[0].attribs),
-			classes,
-			ids,
-			children);
-		this._nodes[id] = node;
-		return node;
-	}
+    let classes = [];
+    if (cNode.attr('class')) {
+      classes = cNode.attr('class').split(' ');
+    }
+    let ids = [];
+    if (cNode.attr('id')) {
+      ids = cNode.attr('id').split(' ');
+    }
+    const type = FckffDOM._getType(cNode[0].name);
+    let html = cNode.html();
+    let href = cNode.attr('href')
 
-	static _getType(name) {
-		switch (name.toLowerCase()) {
-			case 'li':
-				return 'l';
-			case 'p':
-				return 'p';
-			case 'span':
-				return 's';
-			case 'a':
-				return 'a';
-			case 'h1':
-				return 'h';
-			case 'h2':
-				return 'h';
-			case 'h3':
-				return 'h';
-			case 'h4':
-				return 'h';
-			case 'h5':
-				return 'h';
-			case 'h6':
-				return 'h';
-			case 'img':
-				return 'i';
-			default:
-				if (_.includes(['b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'var', 'bdo', 'img', 'map', 'object', 'q', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea'], name)) {
-					return 's';
-				}
-				return 'd';
-		}
-	}
+    if (type === 'i') {
+      html = cNode.attr('src');
+      text = cNode.attr('alt') || '';
+      href = cNode.attr('src');
+    }
 
-	static _getData(attributes) {
-		if (_.isEmpty(attributes)) {
-			return {};
-		}
-		const keys = _.keys(attributes).filter(k => k.match(/data-/));
-		if (keys.length === 0) {
-			return {};
-		}
-		const data = {};
-		keys.forEach(k => {
-			data[k.replace('data-', '')] = attributes[k];
-		});
-		return data;
-	}
+    const node = new Node(id,
+      text,
+      type,
+      html,
+      parentId,
+      this,
+      href,
+      FckffDOM._getData(cNode[0].attribs),
+      classes,
+      ids,
+      children);
+    this._nodes[id] = node;
+    return node;
+  }
 
-	querySelector(selector) {
-		return _.first(this.querySelectorAll(selector));
-	}
+  static _getType(name) {
+    switch (name.toLowerCase()) {
+      case 'li':
+        return 'l';
+      case 'p':
+        return 'p';
+      case 'span':
+        return 's';
+      case 'a':
+        return 'a';
+      case 'h1':
+        return 'h';
+      case 'h2':
+        return 'h';
+      case 'h3':
+        return 'h';
+      case 'h4':
+        return 'h';
+      case 'h5':
+        return 'h';
+      case 'h6':
+        return 'h';
+      case 'img':
+        return 'i';
+      default:
+        if (_.includes(['b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'var', 'bdo', 'img', 'map', 'object', 'q', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea'], name)) {
+          return 's';
+        }
+        return 'd';
+    }
+  }
 
-	querySelectorAll(selector) {
-		return this._nodes.filter(node => node.isSelected(selector));
-	}
+  static _getData(attributes) {
+    if (_.isEmpty(attributes)) {
+      return {};
+    }
+    const keys = _.keys(attributes).filter(k => k.match(/data-/));
+    if (keys.length === 0) {
+      return {};
+    }
+    const data = {};
+    keys.forEach(k => {
+      data[k.replace('data-', '')] = attributes[k];
+    });
+    return data;
+  }
 
-	getNodeById(id) {
-		return this._nodes.filter(node => node.isSelected(id))[0];
-	}
+  querySelector(selector) {
+    return _.first(this.querySelectorAll(selector));
+  }
 
-	body() {
-		return this._body;
-	}
+  querySelectorAll(selector) {
+    return this._nodes.filter(node => node.isSelected(selector));
+  }
 
-	findByText(text) {
+  getNodeById(id) {
+    return this._nodes.filter(node => node.isSelected(id))[0];
+  }
 
-	}
+  body() {
+    return this._body;
+  }
 
-	title() {
-		return this._title;
-	}
+  findByText(text) {
 
-	getById(id) {
-		return _.find(this._nodes, n => n.getId() === id);
-	}
+  }
 
-	getLinks() {
-		return this._nodes.filter(node => node.hasLink()).map(node => node.getLink());
-	}
+  title() {
+    return this._title;
+  }
 
-	text() {
-		const body = this.body();
-		if (body) {
-			return body.text();
-		}
-		return '';
-	}
+  getById(id) {
+    return _.find(this._nodes, n => n.getId() === id);
+  }
 
-	html() {
-		const body = this.body();
-		if (body) {
-			return body.html();
-		}
-		return '';
-	}
+  getLinks() {
+    return this._nodes.filter(node => node.hasLink()).map(node => node.getLink());
+  }
 
-	cleaneval() {
-		const body = this.body();
-		if (body) {
-			return body.getCleaneval();
-		}
-		return '';
-	}
+  text() {
+    const body = this.body();
+    if (body) {
+      return body.text();
+    }
+    return '';
+  }
 
-	removeById(id) {
-		const node = this.getById(id);
-		return node.remove();
-	}
+  html() {
+    const body = this.body();
+    if (body) {
+      return body.html();
+    }
+    return '';
+  }
+
+  cleaneval() {
+    const body = this.body();
+    if (body) {
+      return body.getCleaneval();
+    }
+    return '';
+  }
+
+  removeById(id) {
+    const node = this.getById(id);
+    return node.remove();
+  }
 }

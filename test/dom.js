@@ -25,7 +25,7 @@ const html = `
 
 describe('Dom', function() {
 	describe('#constructor', function() {
-		const dom = new FckffDOM(html);
+		/*const dom = new FckffDOM(html);
 		it('should have test as title', function() {
 			assert.equal(dom.title(), 'Test');
 		});
@@ -38,6 +38,14 @@ describe('Dom', function() {
 			const dom = new FckffDOM('<div id="no-body"><p class="class1 class2">Class</p><p id="id1 id2">Id</p></div>');
 			assert.equal(dom.body().getChildren()[0]._ids[0], 'no-body');
 		});
+    it('should create a dom from html with only one child', function(){
+      const dom = new FckffDOM('<body><span>Foo</span></body>');
+      assert.equal(dom.body().html(), '<div><span>Foo</span></div>');
+    });*/
+    it('should create a dom from html without body', function(){
+      const dom = new FckffDOM('<body><img src="foo.png"/></body>');
+      assert.equal(dom.body().html(), '<div><img src="foo.png"/></div>');
+    });
 	});
 
 

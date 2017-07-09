@@ -66,8 +66,9 @@ var Node = function () {
    * l: List item
    * s: span
    * d: Box (div, nav, header, etc)
+   * i: img (content is the url to source (native src attribute))
    */
-		var allowedTypes = ['h', 's', 'p', 'a', 'l', 'd'];
+		var allowedTypes = ['h', 's', 'p', 'a', 'l', 'd', 'i'];
 		if (!_lodash2.default.includes(allowedTypes, type)) {
 			throw new TypeError('Node.constructor() parameter type (\'' + type + '\') is not allowed.');
 		}
@@ -146,7 +147,7 @@ var Node = function () {
 		key: 'getText',
 		value: function getText() {
 			if (this.getType() === 'i') {
-				return '';
+				return '![' + this._text + '](this._link)';
 			}
 
 			if (this.isLeaf()) {
@@ -216,13 +217,14 @@ var Node = function () {
 	}, {
 		key: 'html',
 		value: function html() {
+			if (this._type === 'i') {
+				console.log('<img src="' + this.getLink() + '"/>');
+				return '<img src="' + this.getLink() + '"/>';
+			}
 			var children = this.getChildren();
 			var content = children.length === 0 ? this.getText() : children.map(function (n) {
 				return n.html();
 			}).join('');
-			if (this._type === 'i') {
-				return '<img src="' + content.trim() + '"/>';
-			}
 			return '' + this._getHtmlTag() + content.trim() + this._getHtmlClosingTag();
 		}
 	}, {

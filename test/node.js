@@ -66,6 +66,13 @@ describe('Node', function() {
 			const node = dom.getById(0);
 			assert.equal(node.html(), '<div><p><span>Text</span><span>Span</span></p></div>');
 		});
+
+    it('should return html of the image', function() {
+      const html = '<body><p>Text <span>Span</span></p><img src="foobar.png"/></body>';
+      const dom = new Dom(html);
+      const node = dom.getById(0);
+      assert.equal(node.html(), '<div><p><span>Text</span><span>Span</span></p><img src="foobar.png"/></div>');
+    });
 	});
 
 	describe('#isLeaf()', function() {

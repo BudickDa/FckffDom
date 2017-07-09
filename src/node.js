@@ -92,7 +92,6 @@ export default class Node {
 		this._classes = classes;
 		this._ids = ids;
 		this._children = children;
-
 	}
 
 	id() {
@@ -117,7 +116,7 @@ export default class Node {
 
 	getText() {
     if(this.getType()==='i'){
-      return '';
+      return `![${this._text}](this._link)`;
     }
 
 		if (this.isLeaf()) {
@@ -181,11 +180,12 @@ export default class Node {
 	}
 
 	html() {
+    if(this._type==='i'){
+      console.log(`<img src="${this.getLink()}"/>`)
+      return `<img src="${this.getLink()}"/>`;
+    }
 		const children = this.getChildren();
 		const content = children.length === 0 ? this.getText() : children.map(n => n.html()).join('');
-		if(this._type==='i'){
-			return `<img src="${content.trim()}"/>`;
-		}
 		return `${this._getHtmlTag()}${content.trim()}${this._getHtmlClosingTag()}`;
 	}
 
