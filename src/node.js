@@ -115,6 +115,10 @@ export default class Node {
 	}
 
 	getText() {
+    if(this.getType()==='i'){
+      return '';
+    }
+
 		if (this.isLeaf()) {
 			return this._text + ' ';
 		}
@@ -178,6 +182,9 @@ export default class Node {
 	html() {
 		const children = this.getChildren();
 		const content = children.length === 0 ? this.getText() : children.map(n => n.html()).join('');
+		if(this._type==='i'){
+			return `<img src="${content.trim()}"/>`;
+		}
 		return `${this._getHtmlTag()}${content.trim()}${this._getHtmlClosingTag()}`;
 	}
 
@@ -197,6 +204,10 @@ export default class Node {
 	}
 
 	getCleaneval(recursiv = false) {
+		if(this.getType()==='i'){
+			return '';
+		}
+
 		const cTags = ['p', 'h', 'l'];
 		let text = '';
 		const tag = this.getType();

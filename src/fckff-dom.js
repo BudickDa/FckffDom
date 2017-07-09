@@ -87,11 +87,17 @@ export default class FckffDOM {
 		if (cNode.attr('id')) {
 			ids = cNode.attr('id').split(' ');
 		}
+		const type =FckffDOM._getType(cNode[0].name);
+
+		let html = cNode.html();
+		if(type==='i'){
+			html = cNode.attr('src');
+		}
 
 		const node = new Node(id,
 			text,
-			FckffDOM._getType(cNode[0].name),
-			cNode.html(),
+			type,
+			html,
 			parentId,
 			this,
 			cNode.attr('href'),
@@ -125,6 +131,8 @@ export default class FckffDOM {
 				return 'h';
 			case 'h6':
 				return 'h';
+			case 'img':
+				return 'i';
 			default:
 				if (_.includes(['b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'var', 'bdo', 'img', 'map', 'object', 'q', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea'], name)) {
 					return 's';

@@ -145,6 +145,10 @@ var Node = function () {
 	}, {
 		key: 'getText',
 		value: function getText() {
+			if (this.getType() === 'i') {
+				return '';
+			}
+
 			if (this.isLeaf()) {
 				return this._text + ' ';
 			}
@@ -216,6 +220,9 @@ var Node = function () {
 			var content = children.length === 0 ? this.getText() : children.map(function (n) {
 				return n.html();
 			}).join('');
+			if (this._type === 'i') {
+				return '<img src="' + content.trim() + '"/>';
+			}
 			return '' + this._getHtmlTag() + content.trim() + this._getHtmlClosingTag();
 		}
 	}, {
@@ -243,6 +250,10 @@ var Node = function () {
 		key: 'getCleaneval',
 		value: function getCleaneval() {
 			var recursiv = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+			if (this.getType() === 'i') {
+				return '';
+			}
 
 			var cTags = ['p', 'h', 'l'];
 			var text = '';
