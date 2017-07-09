@@ -181,7 +181,7 @@ export default class Node {
 
 	html() {
     if(this._type==='i'){
-      console.log(`<img src="${this.getLink()}"/>`)
+      console.log(`<img ${this._getHtmlDataAttribute()} src="${this.getLink()}"/>`)
       return `<img src="${this.getLink()}"/>`;
     }
 		const children = this.getChildren();
