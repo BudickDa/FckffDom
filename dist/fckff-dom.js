@@ -122,8 +122,14 @@ var FckffDOM = function () {
 			if (cNode.attr('id')) {
 				ids = cNode.attr('id').split(' ');
 			}
+			var type = FckffDOM._getType(cNode[0].name);
 
-			var node = new _node2.default(id, text, FckffDOM._getType(cNode[0].name), cNode.html(), parentId, this, cNode.attr('href'), FckffDOM._getData(cNode[0].attribs), classes, ids, children);
+			var html = cNode.html();
+			if (type === 'i') {
+				html = cNode.attr('src');
+			}
+
+			var node = new _node2.default(id, text, type, html, parentId, this, cNode.attr('href'), FckffDOM._getData(cNode[0].attribs), classes, ids, children);
 			this._nodes[id] = node;
 			return node;
 		}
@@ -232,6 +238,8 @@ var FckffDOM = function () {
 					return 'h';
 				case 'h6':
 					return 'h';
+				case 'img':
+					return 'i';
 				default:
 					if (_lodash2.default.includes(['b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp', 'var', 'bdo', 'img', 'map', 'object', 'q', 'span', 'sub', 'sup', 'button', 'input', 'label', 'select', 'textarea'], name)) {
 						return 's';
