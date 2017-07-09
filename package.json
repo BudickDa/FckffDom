@@ -1,6 +1,6 @@
 {
   "name": "fckffdom",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A datastructure for html documents optimized for datamining.",
   "main": "index.js",
   "scripts": {

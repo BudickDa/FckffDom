@@ -42,8 +42,9 @@ export default class Node {
 		 * l: List item
 		 * s: span
 		 * d: Box (div, nav, header, etc)
+		 * i: img (content is the url to source (native src attribute))
 		 */
-		const allowedTypes = ['h', 's', 'p', 'a', 'l', 'd'];
+		const allowedTypes = ['h', 's', 'p', 'a', 'l', 'd', 'i'];
 		if (!_.includes(allowedTypes, type)) {
 			throw new TypeError(`Node.constructor() parameter type ('${type}') is not allowed.`);
 		}
