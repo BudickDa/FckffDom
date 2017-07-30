@@ -218,7 +218,6 @@ var Node = function () {
 		key: 'html',
 		value: function html() {
 			if (this._type === 'i') {
-				console.log('<img ' + this._getHtmlDataAttribute() + ' src="' + this.getLink() + '"/>');
 				return '<img src="' + this.getLink() + '"/>';
 			}
 			var children = this.getChildren();

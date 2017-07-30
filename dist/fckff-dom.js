@@ -49,6 +49,8 @@ var FckffDOM = function () {
         n.remove();
       }
     });
+
+    this._tableData = FckffDOM.getDataFromTables($);
   }
 
   _createClass(FckffDOM, [{
@@ -220,6 +222,23 @@ var FckffDOM = function () {
       return node.remove();
     }
   }], [{
+    key: 'getDataFromTables',
+    value: function getDataFromTables($) {
+      var data = [];
+      $('table').each(function (i, e) {
+        $(e).find('tr').each(function (j, row) {
+          var fields = $(row).find('td');
+          if (fields.length === 2) {
+            data.push({
+              key: $(fields[0]).text().replace(/\s|\n|:|,|\./gi, ''),
+              value: $(fields[1]).text().trim()
+            });
+          }
+        });
+      });
+      return data;
+    }
+  }, {
     key: '_getType',
     value: function _getType(name) {
       switch (name.toLowerCase()) {

@@ -27,6 +27,24 @@ export default class FckffDOM {
         n.remove();
       }
     });
+
+    this._tableData = FckffDOM.getDataFromTables($)
+  }
+
+  static getDataFromTables($) {
+    const data = [];
+    $('table').each((i, e) => {
+      $(e).find('tr').each((j, row) => {
+        const fields = $(row).find('td');
+        if (fields.length === 2) {
+          data.push({
+            key: $(fields[0]).text().replace(/\s|\n|:|,|\./gi, ''),
+            value: $(fields[1]).text().trim()
+          })
+        }
+      })
+    });
+    return data;
   }
 
   getOriginal() {
